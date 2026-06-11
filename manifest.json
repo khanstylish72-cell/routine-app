@@ -1,8 +1,17 @@
 {
-  "name": "Daily Routine Reminder",
-  "short_name": "Routine",
+  "name": "Work With Worship",
+  "short_name": "WWW",
+  "description": "Daily routine tracker for deen and duniya",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",
-  "theme_color": "#7c3aed"
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
