@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daily Routine">
+<title>Daily Routine Reminder</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --card2: #16213e;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: #2d2d4e;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .app-title {
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--accent2), #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .date-badge {
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 10px;
+    height: 6px;
+    margin-top: 12px;
+  }
+
+  .progress-bar-fill {
+    height: 6px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+    text-align: right;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    padding: 16px 16px 8px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px 10px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .stat-card.done .stat-num { color: var(--green); }
+  .stat-card.pending .stat-num { color: var(--yellow); }
+  .stat-card.total .stat-num { color: var(--accent2); }
+
+  /* Section */
+  .section {
+    padding: 8px 16px 4px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Task Card */
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .task-card.cat-fajr::before { background: #6366f1; }
+  .task-card.cat-work::before { background: #3b82f6; }
+  .task-card.cat-health::before { background: var(--green); }
+  .task-card.cat-learning::before { background: var(--yellow); }
+  .task-card.cat-personal::before { background: var(--accent2); }
+  .task-card.cat-night::before { background: #8b5cf6; }
+
+  .task-card.completed {
+    opacity: 0.6;
+  }
+
+  .task-card.completed .task-title {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  .task-icon {
+    font-size: 26px;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .task-info { flex: 1; }
+
+  .task-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .task-time {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .task-tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .tag-fajr { background: #312e81; color: #a5b4fc; }
+  .tag-work { background: #1e3a5f; color: #93c5fd; }
+  .tag-health { background: #064e3b; color: #6ee7b7; }
+  .tag-learning { background: #451a03; color: #fcd34d; }
+  .tag-personal { background: #3b0764; color: #d8b4fe; }
+  .tag-night { background: #2e1065; color: #c4b5fd; }
+
+  .check-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: transparent;
+  }
+
+  .task-card.completed .check-btn {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  /* Add Task Button */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    transition: transform 0.2s;
+  }
+
+  .fab:active { transform: scale(0.92); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 300;
+    display: none;
+    align-items: flex-end;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #1e1e35;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 36px;
+    width: 100%;
+    border-top: 1px solid var(--border);
+  }
+
+  .modal h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: block;
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--accent);
+  }
+
+  .emoji-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .emoji-btn {
+    font-size: 22px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .emoji-btn.selected {
+    border-color: var(--accent);
+    background: #2d1b6e;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+  }
+
+  .btn-secondary {
+    background: var(--border);
+    color: var(--muted);
+  }
+
+  /* Reset button */
+  .reset-btn {
+    display: block;
+    margin: 8px auto 80px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Notification toast */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    display: none;
+    white-space: nowrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">🌙 Daily Routine</div>
+    <div class="date-badge" id="dateDisplay">Today</div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0% complete</div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card done">
+    <div class="stat-num" id="doneCount">0</div>
+    <div class="stat-label">Done ✅</div>
+  </div>
+  <div class="stat-card pending">
+    <div class="stat-num" id="pendingCount">0</div>
+    <div class="stat-label">Pending ⏳</div>
+  </div>
+  <div class="stat-card total">
+    <div class="stat-num" id="totalCount">0</div>
+    <div class="stat-label">Total 📋</div>
+  </div>
+</div>
+
+<div id="taskList"></div>
+
+<button class="reset-btn" onclick="resetDay()">🔄 Reset Day</button>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>➕ Add New Task</h3>
+    <div class="form-group">
+      <label>Task Name</label>
+      <input type="text" id="taskName" placeholder="e.g. Fajr Namaz, Workout...">
+    </div>
+    <div class="form-group">
+      <label>Time</label>
+      <input type="time" id="taskTime">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="taskCat">
+        <option value="fajr">🕌 Ibadah</option>
+        <option value="work">💼 Work/Freelancing</option>
+        <option value="health">💪 Health/Exercise</option>
+        <option value="learning">📚 Learning</option>
+        <option value="personal">🌿 Personal</option>
+        <option value="night">🌙 Night Routine</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Icon</label>
+      <div class="emoji-row" id="emojiRow">
+        <button class="emoji-btn selected" onclick="selectEmoji(this, '🕌')">🕌</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '💼')">💼</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '💪')">💪</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '📚')">📚</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '🏃')">🏃</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '🥗')">🥗</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '💻')">💻</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '🌿')">🌿</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '😴')">😴</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '✍️')">✍️</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '🎯')">🎯</button>
+        <button class="emoji-btn" onclick="selectEmoji(this, '📱')">📱</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let tasks = JSON.parse(localStorage.getItem('routineTasks')) || getDefaultTasks();
+  let selectedEmoji = '🕌';
+
+  function getDefaultTasks() {
+    return [
+      { id: 1, title: 'Fajr Namaz', time: '05:00', cat: 'fajr', icon: '🕌', done: false },
+      { id: 2, title: 'Morning Walk / Exercise', time: '06:30', cat: 'health', icon: '🏃', done: false },
+      { id: 3, title: 'Breakfast', time: '07:30', cat: 'health', icon: '🥗', done: false },
+      { id: 4, title: 'Fiverr / Client Work', time: '09:00', cat: 'work', icon: '💼', done: false },
+      { id: 5, title: 'SEO Learning', time: '11:00', cat: 'learning', icon: '📚', done: false },
+      { id: 6, title: 'Zuhr Namaz', time: '13:00', cat: 'fajr', icon: '🕌', done: false },
+      { id: 7, title: 'Guest Post Outreach', time: '14:00', cat: 'work', icon: '💻', done: false },
+      { id: 8, title: 'Asr Namaz', time: '16:30', cat: 'fajr', icon: '🕌', done: false },
+      { id: 9, title: 'Maghrib Namaz', time: '18:30', cat: 'fajr', icon: '🕌', done: false },
+      { id: 10, title: 'Isha Namaz', time: '20:00', cat: 'fajr', icon: '🕌', done: false },
+      { id: 11, title: 'Night Planning / Journal', time: '21:30', cat: 'night', icon: '✍️', done: false },
+      { id: 12, title: 'Sleep', time: '23:00', cat: 'night', icon: '😴', done: false },
+    ];
+  }
+
+  function saveTasks() {
+    localStorage.setItem('routineTasks', JSON.stringify(tasks));
+  }
+
+  function updateStats() {
+    const done = tasks.filter(t => t.done).length;
+    const total = tasks.length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+
+    document.getElementById('doneCount').textContent = done;
+    document.getElementById('pendingCount').textContent = total - done;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = pct + '% complete';
+  }
+
+  function renderTasks() {
+    const container = document.getElementById('taskList');
+    container.innerHTML = '';
+
+    const cats = [
+      { key: 'fajr', label: '🕌 Ibadah' },
+      { key: 'work', label: '💼 Work' },
+      { key: 'health', label: '💪 Health' },
+      { key: 'learning', label: '📚 Learning' },
+      { key: 'personal', label: '🌿 Personal' },
+      { key: 'night', label: '🌙 Night' },
+    ];
+
+    cats.forEach(cat => {
+      const catTasks = tasks.filter(t => t.cat === cat.key);
+      if (!catTasks.length) return;
+
+      const sec = document.createElement('div');
+      sec.className = 'section';
+      sec.innerHTML = `<div class="section-title">${cat.label}</div>`;
+
+      catTasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = `task-card cat-${task.cat} ${task.done ? 'completed' : ''}`;
+        card.innerHTML = `
+          <div class="task-icon">${task.icon}</div>
+          <div class="task-info">
+            <div class="task-title">${task.title}</div>
+            <div class="task-meta">
+              <div class="task-time">⏰ ${task.time}</div>
+              <span class="task-tag tag-${task.cat}">${cat.label.split(' ')[1]}</span>
+            </div>
+          </div>
+          <button class="check-btn" onclick="toggleTask(${task.id}, event)">✓</button>
+        `;
+        card.onclick = () => toggleTask(task.id);
+        sec.appendChild(card);
+      });
+
+      container.appendChild(sec);
+    });
+
+    if (!tasks.length) {
+      container.innerHTML = `<div class="empty-state">No tasks yet!<br>Tap + to add your first task 🎯</div>`;
+    }
+
+    updateStats();
+  }
+
+  function toggleTask(id, e) {
+    if (e) e.stopPropagation();
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      task.done = !task.done;
+      saveTasks();
+      renderTasks();
+      if (task.done) showToast('✅ ' + task.title + ' done!');
+    }
+  }
+
+  function resetDay() {
+    if (confirm('Reset all tasks for today?')) {
+      tasks.forEach(t => t.done = false);
+      saveTasks();
+      renderTasks();
+      showToast('🔄 Day reset!');
+    }
+  }
+
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('taskName').value = '';
+    document.getElementById('taskTime').value = '';
+  }
+
+  function selectEmoji(btn, emoji) {
+    document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedEmoji = emoji;
+  }
+
+  function addTask() {
+    const name = document.getElementById('taskName').value.trim();
+    const time = document.getElementById('taskTime').value;
+    const cat = document.getElementById('taskCat').value;
+
+    if (!name) { alert('Task name likhain!'); return; }
+    if (!time) { alert('Time select karein!'); return; }
+
+    const newTask = {
+      id: Date.now(),
+      title: name,
+      time: time,
+      cat: cat,
+      icon: selectedEmoji,
+      done: false
+    };
+
+    tasks.push(newTask);
+    saveTasks();
+    renderTasks();
+    closeModal();
+    showToast('✅ Task add ho gaya!');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+
+  function updateDate() {
+    const now = new Date();
+    const options = { weekday: 'short', month: 'short', day: 'numeric' };
+    document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', options);
+  }
+
+  // Init
+  updateDate();
+  renderTasks();
+</script>
+</body>
+  </html>
